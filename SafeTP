@@ -1,0 +1,47 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+local userInput = game:GetService("UserInputService")
+
+local gui = playerGui:WaitForChild("ScreenGui")
+local keyBox = gui:WaitForChild("KeyInputBox")
+local spawnButton = gui:WaitForChild("SpawnButton")
+
+local correctKey = "#P3ncil1369A+="
+local platform -- to avoid multiple spawns
+
+-- Check key
+keyBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        if keyBox.Text == correctKey then
+            spawnButton.Visible = true
+            keyBox.Text = "" -- clear the key
+            keyBox.PlaceholderText = "Access Granted"
+            keyBox.TextEditable = false
+        else
+            keyBox.Text = ""
+            keyBox.PlaceholderText = "Wrong Key! Try again."
+        end
+    end
+end)
+
+-- Platform spawn & teleport
+local function spawnAndTeleport()
+    if platform and platform.Parent then return end
+
+    platform = Instance.new("Part")
+    platform.Size = Vector3.new(25, 2, 25)
+    platform.Anchored = true
+    platform.Position = Vector3.new(0, 10, 0)
+    platform.Name = "ClientPlatform"
+    platform.BrickColor = BrickColor.new("Bright orange")
+    platform.Parent = workspace
+
+    task.wait(0.1)
+
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+    rootPart.CFrame = CFrame.new(platform.Position + Vector3.new(0, platform.Size.Y / 2 + 10, 0))
+end
+
+spawnButton.MouseButton1Click:Connect(spawnAndTeleport)

@@ -3,8 +3,7 @@ https://zyxhubkeysv3.playcode.io/
 
 
 
-`loadstring(game:HttpGet("https://raw.githubusercontent.com/crownytrex2/Zyx-Hub-V3/refs/heads/main/script"))()`
-
+`loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/9569fb64e7ebad6e"))()`
 
 
 

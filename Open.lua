@@ -12,17 +12,21 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 --============================--
---  Destroy previous GUI
+--  Destroy previous GUIs
 --============================--
 pcall(function()
     if game.CoreGui:FindFirstChild("ZyxKeyGUI") then
         game.CoreGui.ZyxKeyGUI:Destroy()
     end
+    if game.CoreGui:FindFirstChild("FlyGui") then
+        game.CoreGui:FindFirstChild("FlyGui"):Destroy()
+    end
 end)
 
 --============================--
---  Create Key GUI
+--   CREATE **ONLY** THE KEY GUI
 --============================--
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZyxKeyGUI"
 gui.Parent = game.CoreGui
@@ -71,10 +75,10 @@ status.TextColor3 = Color3.new(1,1,1)
 status.TextXAlignment = Enum.TextXAlignment.Left
 
 
+--============================--
+--  KEY VALIDATION FUNCTION
+--============================--
 
---============================--
---  Key Validation Function
---============================--
 local function checkKey(k)
     local ok, data = pcall(function()
         return HttpService:GetAsync(RAW_URL, true)
@@ -88,6 +92,7 @@ local function checkKey(k)
 
     for _, keyObj in ipairs(parsed) do
         if tostring(keyObj.value) == tostring(k) then
+            
             -- Check expiration
             local exp = keyObj.expiresAt
             if exp then
@@ -102,7 +107,7 @@ local function checkKey(k)
                 end
             end
 
-            return true, "Valid"
+            return true, "Valid Key"
         end
     end
 
@@ -111,13 +116,15 @@ end
 
 
 
---============================--
---  Fly Script Loader
---============================--
+--================================================--
+--   FLY SCRIPT LOADER (ONLY RUNS AFTER VALID KEY)
+--================================================--
+
 local function loadFly()
+
+    -- destroy key UI fully
     gui:Destroy()
 
-    -- SAME FLY GUI AS BEFORE:
     local flyGui = Instance.new("ScreenGui", game.CoreGui)
     flyGui.Name = "FlyGui"
 
@@ -146,12 +153,15 @@ local function loadFly()
     speedBox.TextColor3 = Color3.new(1,1,1)
     Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0,7)
 
-    local flying = false
-    local speed = 60
+    -----------------------------------------------------------------
+    -- Fly Logic 
+    -----------------------------------------------------------------
     local char = player.Character or player.CharacterAdded:Wait()
     local hum = char:WaitForChild("Humanoid")
     local hrp = char:WaitForChild("HumanoidRootPart")
 
+    local flying = false
+    local speed = 60
     local BV, BG
     local keys = {W=false,S=false,A=false,D=false,Up=false,Down=false}
 
@@ -164,6 +174,7 @@ local function loadFly()
         if i.KeyCode == Enum.KeyCode.Space then keys.Up=true end
         if i.KeyCode == Enum.KeyCode.LeftControl then keys.Down=true end
     end)
+
     UserInputService.InputEnded:Connect(function(i)
         if i.KeyCode == Enum.KeyCode.W then keys.W=false end
         if i.KeyCode == Enum.KeyCode.S then keys.S=false end
@@ -177,22 +188,22 @@ local function loadFly()
         if flying then
             flying=false
             toggle.Text="Fly: OFF"
+            hum.PlatformStand=false
             if BV then BV:Destroy() end
             if BG then BG:Destroy() end
-            hum.PlatformStand=false
         else
             flying=true
             toggle.Text="Fly: ON"
             hum.PlatformStand=true
-            BV=Instance.new("BodyVelocity",hrp)
+            BV=Instance.new("BodyVelocity", hrp)
             BV.MaxForce=Vector3.new(1e6,1e6,1e6)
-            BG=Instance.new("BodyGyro",hrp)
+            BG=Instance.new("BodyGyro", hrp)
             BG.MaxTorque=Vector3.new(1e6,1e6,1e6)
         end
     end)
 
     speedBox.FocusLost:Connect(function()
-        local s=tonumber(speedBox.Text)
+        local s = tonumber(speedBox.Text)
         if s then speed=s end
     end)
 
@@ -200,10 +211,12 @@ local function loadFly()
         if flying and BV and BG then
             local cam = workspace.CurrentCamera
             local move = Vector3.zero
+
             if keys.W then move += cam.CFrame.LookVector end
             if keys.S then move -= cam.CFrame.LookVector end
             if keys.A then move -= cam.CFrame.RightVector end
             if keys.D then move += cam.CFrame.RightVector end
+
             move = Vector3.new(move.X,0,move.Z)
             if move.Magnitude > 0 then move = move.Unit end
 
@@ -218,17 +231,18 @@ end
 
 
 --============================--
---  Verify Button
+--  VERIFY BUTTON LOGIC
 --============================--
+
 verifyBtn.MouseButton1Click:Connect(function()
-    status.Text = "Checking..."
+    status.Text = "Checking key..."
 
     local valid, msg = checkKey(keyBox.Text)
 
     if valid then
-        status.Text = "Key Valid ✓"
+        status.Text = "Key Valid ✓ Loading..."
         task.wait(0.6)
-        loadFly()
+        loadFly()   -- ONLY load fly after success
     else
         status.Text = "❌ " .. msg
     end

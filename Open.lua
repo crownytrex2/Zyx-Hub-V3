@@ -1,67 +1,61 @@
---============================--
---  Zyx Hub Key System Loader
---============================--
+--======================================--
+-- Zyx Hub | Raw Key List Version
+--======================================--
 
-local RAW_URL = "https://raw.githubusercontent.com/crownytrex2/Zyx-Hub-V3/main/generated_keys.json"
+local RAW_URL = "https://raw.githubusercontent.com/crownytrex2/Zyx-Hub-V3/main/generated_keys.txt"
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
 
---============================--
---  Destroy previous GUIs
---============================--
+-- Cleanup existing GUI
 pcall(function()
     if game.CoreGui:FindFirstChild("ZyxKeyGUI") then
         game.CoreGui.ZyxKeyGUI:Destroy()
     end
     if game.CoreGui:FindFirstChild("FlyGui") then
-        game.CoreGui:FindFirstChild("FlyGui"):Destroy()
+        game.CoreGui.FlyGui:Destroy()
     end
 end)
 
---============================--
---   CREATE **ONLY** THE KEY GUI
---============================--
+--======================================--
+-- CREATE KEY GUI
+--======================================--
 
-local gui = Instance.new("ScreenGui")
+local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "ZyxKeyGUI"
-gui.Parent = game.CoreGui
-gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 350, 0, 150)
-frame.Position = UDim2.new(0.5, -175, 0.5, -75)
+frame.Size = UDim2.new(0,350,0,150)
+frame.Position = UDim2.new(0.5,-175,0.5,-75)
 frame.BackgroundColor3 = Color3.fromRGB(100,100,100)
 frame.BackgroundTransparency = 0.3
 frame.Active = true
 frame.Draggable = true
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
 
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1,0,0,30)
-title.Text = "Zyx Hub | Key System"
 title.BackgroundTransparency = 1
-title.TextColor3 = Color3.new(1,1,1)
+title.Text = "Zyx Hub | Key System"
 title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1,1,1)
 title.TextSize = 18
 
 local keyBox = Instance.new("TextBox", frame)
 keyBox.Size = UDim2.new(1,-20,0,35)
 keyBox.Position = UDim2.new(0,10,0,45)
-keyBox.PlaceholderText = "Enter your key here"
-keyBox.Text = ""
+keyBox.PlaceholderText = "Enter Key"
 keyBox.BackgroundColor3 = Color3.fromRGB(70,70,70)
 keyBox.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0,8)
 
 local verifyBtn = Instance.new("TextButton", frame)
 verifyBtn.Size = UDim2.new(0,120,0,35)
 verifyBtn.Position = UDim2.new(0,10,1,-45)
-verifyBtn.Text = "Verify Key"
+verifyBtn.Text = "Verify"
 verifyBtn.BackgroundColor3 = Color3.fromRGB(0,150,0)
 verifyBtn.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", verifyBtn).CornerRadius = UDim.new(0,8)
@@ -70,43 +64,32 @@ local status = Instance.new("TextLabel", frame)
 status.Size = UDim2.new(0,180,0,35)
 status.Position = UDim2.new(0,140,1,-45)
 status.BackgroundTransparency = 1
-status.Text = "Waiting..."
 status.TextColor3 = Color3.new(1,1,1)
+status.Text = "Waiting..."
 status.TextXAlignment = Enum.TextXAlignment.Left
 
-
---============================--
---  KEY VALIDATION FUNCTION
---============================--
+--======================================--
+-- RAW KEY VALIDATION
+--======================================--
 
 local function checkKey(k)
     local ok, data = pcall(function()
-        return HttpService:GetAsync(RAW_URL, true)
+        return HttpService:GetAsync(RAW_URL)
     end)
 
     if not ok then
         return false, "GitHub Error"
     end
 
-    local parsed = HttpService:JSONDecode(data)
+    -- Split by lines
+    local keyList = {}
+    for key in string.gmatch(data, "[^\r\n]+") do
+        table.insert(keyList, key)
+    end
 
-    for _, keyObj in ipairs(parsed) do
-        if tostring(keyObj.value) == tostring(k) then
-            
-            -- Check expiration
-            local exp = keyObj.expiresAt
-            if exp then
-                local y,mo,d,h,mi,s = exp:match("(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)")
-                local expiry = os.time({
-                    year = y, month = mo, day = d,
-                    hour = h, min = mi, sec = s
-                })
-
-                if os.time() > expiry then
-                    return false, "Expired Key"
-                end
-            end
-
+    -- Compare
+    for _, v in ipairs(keyList) do
+        if k == v then
             return true, "Valid Key"
         end
     end
@@ -114,15 +97,11 @@ local function checkKey(k)
     return false, "Invalid Key"
 end
 
-
-
---================================================--
---   FLY SCRIPT LOADER (ONLY RUNS AFTER VALID KEY)
---================================================--
+--======================================--
+-- LOAD FLY GUI (ONLY AFTER VALID KEY)
+--======================================--
 
 local function loadFly()
-
-    -- destroy key UI fully
     gui:Destroy()
 
     local flyGui = Instance.new("ScreenGui", game.CoreGui)
@@ -143,7 +122,7 @@ local function loadFly()
     toggle.Text = "Fly: OFF"
     toggle.BackgroundColor3 = Color3.fromRGB(80,80,80)
     toggle.TextColor3 = Color3.new(1,1,1)
-    Instance.new("UICorner", toggle).CornerRadius = UDim.new(0,7)
+    Instance.new("UICorner", toggle).CornerRadius = UDim.new(0,8)
 
     local speedBox = Instance.new("TextBox", frame)
     speedBox.Size = UDim2.new(0,60,0,30)
@@ -151,11 +130,8 @@ local function loadFly()
     speedBox.Text = "60"
     speedBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
     speedBox.TextColor3 = Color3.new(1,1,1)
-    Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0,7)
+    Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0,8)
 
-    -----------------------------------------------------------------
-    -- Fly Logic 
-    -----------------------------------------------------------------
     local char = player.Character or player.CharacterAdded:Wait()
     local hum = char:WaitForChild("Humanoid")
     local hrp = char:WaitForChild("HumanoidRootPart")
@@ -174,7 +150,6 @@ local function loadFly()
         if i.KeyCode == Enum.KeyCode.Space then keys.Up=true end
         if i.KeyCode == Enum.KeyCode.LeftControl then keys.Down=true end
     end)
-
     UserInputService.InputEnded:Connect(function(i)
         if i.KeyCode == Enum.KeyCode.W then keys.W=false end
         if i.KeyCode == Enum.KeyCode.S then keys.S=false end
@@ -228,21 +203,19 @@ local function loadFly()
     end)
 end
 
-
-
---============================--
---  VERIFY BUTTON LOGIC
---============================--
+--======================================--
+-- VERIFY BUTTON
+--======================================--
 
 verifyBtn.MouseButton1Click:Connect(function()
-    status.Text = "Checking key..."
+    status.Text = "Checking..."
 
-    local valid, msg = checkKey(keyBox.Text)
+    local ok, msg = checkKey(keyBox.Text)
 
-    if valid then
-        status.Text = "Key Valid ✓ Loading..."
-        task.wait(0.6)
-        loadFly()   -- ONLY load fly after success
+    if ok then
+        status.Text = "Key Valid ✓"
+        task.wait(0.5)
+        loadFly()
     else
         status.Text = "❌ " .. msg
     end

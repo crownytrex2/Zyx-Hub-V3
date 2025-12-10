@@ -2,7 +2,7 @@
 --  Zyx Hub Key System Loader
 --============================--
 
-local RAW_URL = "https://raw.githubusercontent.com/crownytrex2/Zyx-Hub-V3/refs/heads/main/generated_keys.json"
+local RAW_URL = "https://raw.githubusercontent.com/crownytrex2/Zyx-Hub-V3/main/generated_keys.json"
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
